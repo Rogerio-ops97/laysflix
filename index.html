@@ -2,8 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#080b18">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#070810">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,14 +14,19 @@
   <title>LaysFlix</title>
 </head>
 <body>
-  <header><div class="brand"><img src="icons/icon-192.png" alt=""><div><b>LaysFlix</b><small>minha biblioteca</small></div></div><button id="settingsButton" class="round" aria-label="Ajustes">⚙</button></header>
-  <main>
-    <section class="hero"><p>Seu cinema, do seu jeito.</p><h1>O que vamos assistir hoje?</h1><form id="searchForm"><input id="searchInput" type="search" placeholder="Buscar filmes e séries" autocomplete="off"><button>Buscar</button></form></section>
-    <section class="stats" aria-label="Resumo"><article><b id="totalCount">0</b><span>na biblioteca</span></article><article><b id="watchingCount">0</b><span>assistindo</span></article><article><b id="watchedCount">0</b><span>assistidos</span></article></section>
-    <section><div class="section-title"><h2 id="sectionTitle">Minha biblioteca</h2><select id="filter"><option value="all">Tudo</option><option value="watching">Assistindo</option><option value="watchlist">Quero assistir</option><option value="watched">Assistidos</option><option value="favorite">Favoritos</option></select></div><div id="message" class="message"></div><div id="grid" class="grid"></div></section>
-  </main>
-  <dialog id="details"><button class="close" aria-label="Fechar">×</button><div id="detailsContent"></div></dialog>
-  <dialog id="settings"><button class="close" aria-label="Fechar">×</button><h2>Ajustes</h2><label>Chave da API ou token do TMDB<input id="tmdbKey" type="password" autocomplete="off" placeholder="Cole aqui"></label><p class="hint">Fica somente neste aparelho. Nunca é enviada ao GitHub.</p><button id="saveKey" class="primary">Salvar chave</button><hr><button id="exportData">Exportar backup</button><label class="file">Importar backup<input id="importData" type="file" accept="application/json"></label></dialog>
+  <div id="app">
+    <header class="topbar"><button id="brandButton" class="brand"><img src="icons/icon-192.png" alt=""><span>LaysFlix</span></button><div class="top-actions"><button id="searchButton" class="icon-button" aria-label="Buscar">⌕</button><button id="settingsButton" class="avatar" aria-label="Perfil e ajustes">L</button></div></header>
+    <main id="main"></main>
+    <nav class="tabbar" aria-label="Navegação principal">
+      <button data-view="home" class="active"><span>⌂</span><small>Início</small></button>
+      <button data-view="discover"><span>⌕</span><small>Descobrir</small></button>
+      <button data-view="library"><span>▦</span><small>Biblioteca</small></button>
+      <button data-view="profile"><span>◎</span><small>Perfil</small></button>
+    </nav>
+  </div>
+  <section id="detailPage" class="page-layer" aria-hidden="true"><div id="detailContent"></div></section>
+  <section id="searchPage" class="page-layer" aria-hidden="true"><div class="page-head"><button class="back" data-close-search>‹</button><form id="searchForm"><input id="searchInput" type="search" placeholder="Filmes, séries e pessoas" autocomplete="off"><button>Buscar</button></form></div><div id="searchResults" class="search-results"></div></section>
+  <dialog id="settings"><button class="close" aria-label="Fechar">×</button><div class="settings-brand"><img src="icons/icon-192.png" alt=""><div><h2>LaysFlix</h2><p>Seu cinema, do seu jeito.</p></div></div><label>Token de leitura ou chave do TMDB<input id="tmdbKey" type="password" autocomplete="off" placeholder="Cole aqui"></label><p class="hint">Guardado somente neste iPhone. Nunca é publicado no GitHub.</p><button id="saveKey" class="primary full">Salvar acesso</button><div class="setting-actions"><button id="exportData">Exportar backup</button><label class="file">Importar backup<input id="importData" type="file" accept="application/json"></label></div><p class="tmdb-credit">Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.</p></dialog>
   <div id="toast" role="status"></div>
   <script src="app.js"></script>
 </body>
