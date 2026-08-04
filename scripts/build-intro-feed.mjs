@@ -7,4 +7,7 @@ const data=await response.json();
 const items=(data.results||[]).filter(item=>item.backdrop_path).slice(0,12).map(item=>({id:item.id,title:item.title,release_date:item.release_date,backdrop_path:item.backdrop_path,poster_path:item.poster_path,vote_average:item.vote_average}));
 if(!items.length)throw new Error('Nenhum filme em alta com imagem');
 await fs.writeFile('intro-feed.json',JSON.stringify({generatedAt:new Date().toISOString(),items},null,2));
+const preload=`https://image.tmdb.org/t/p/original${items[0].backdrop_path}`;
+const index=await fs.readFile('index.html','utf8');
+await fs.writeFile('index.html',index.replaceAll('__INTRO_PRELOAD__',preload));
 console.log(`Intro dinâmica gerada com ${items.length} filmes.`);
