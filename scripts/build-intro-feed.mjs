@@ -1,0 +1,10 @@
+import fs from 'node:fs/promises';
+const token=process.env.TMDB_TOKEN;
+if(!token)throw new Error('TMDB_TOKEN ausente');
+const response=await fetch('https://api.themoviedb.org/3/trending/movie/day?language=pt-BR',{headers:{accept:'application/json',Authorization:`Bearer ${token}`}});
+if(!response.ok)throw new Error(`TMDB ${response.status}`);
+const data=await response.json();
+const items=(data.results||[]).filter(item=>item.backdrop_path).slice(0,12).map(item=>({id:item.id,title:item.title,release_date:item.release_date,backdrop_path:item.backdrop_path,poster_path:item.poster_path,vote_average:item.vote_average}));
+if(!items.length)throw new Error('Nenhum filme em alta com imagem');
+await fs.writeFile('intro-feed.json',JSON.stringify({generatedAt:new Date().toISOString(),items},null,2));
+console.log(`Intro dinâmica gerada com ${items.length} filmes.`);

@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-08-04T21:51:06.081Z",
+  "items": [
+    {
+      "id": 969681,
+      "title": "Homem-Aranha: Um Novo Dia",
+      "release_date": "2026-07-28",
+      "backdrop_path": "/qeQJx07rK2xm8SD2sJxFKhE7gs0.jpg",
+      "poster_path": "/x0nvYzQpyJc5pdT9lMnkMuYAg0O.jpg",
+      "vote_average": 7.958
+    },
+    {
+      "id": 1212763,
+      "title": "A Morte do Demônio: Em Chamas",
+      "release_date": "2026-07-07",
+      "backdrop_path": "/biwEwIkjZhMUfXzz59bpeDzwYB6.jpg",
+      "poster_path": "/fteLdvfRnltfLjAEnsl5E3vImnW.jpg",
+      "vote_average": 7.213
+    },
+    {
+      "id": 1368337,
+      "title": "A Odisseia",
+      "release_date": "2026-07-15",
+      "backdrop_path": "/sSIzzVhhLfgLKVBcAUv0X6cLYz9.jpg",
+      "poster_path": "/muMwJAiMtReEHLKpKMWt2rMkYF7.jpg",
+      "vote_average": 8
+    },
+    {
+      "id": 1339713,
+      "title": "Obsessão",
+      "release_date": "2026-05-13",
+      "backdrop_path": "/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg",
+      "poster_path": "/wUc6IDf5ChjM1UyQye21qFBeJY0.jpg",
+      "vote_average": 8.2
+    },
+    {
+      "id": 1081003,
+      "title": "Supergirl",
+      "release_date": "2026-06-24",
+      "backdrop_path": "/4X2YSe8PaYbsBqX3TDmmIU4vOju.jpg",
+      "poster_path": "/qhXfLI1gDWaahzfHT0cb2CH61hO.jpg",
+      "vote_average": 6.74
+    },
+    {
+      "id": 1307118,
+      "title": "Soulm8te",
+      "release_date": "2026-07-31",
+      "backdrop_path": "/ebcOSaZLxdCMHDjJJQzx5PiEyzl.jpg",
+      "poster_path": "/bNErActDctl6cdUGw9pnjSCmyhQ.jpg",
+      "vote_average": 6.5
+    },
+    {
+      "id": 1594914,
+      "title": "Lucky Strike",
+      "release_date": "2026-06-26",
+      "backdrop_path": "/7FivR6OVr56calRq8UyZjmPsVE2.jpg",
+      "poster_path": "/fBniztkLes0lA2CD50j4iWAwX5y.jpg",
+      "vote_average": 7.4
+    },
+    {
+      "id": 1284465,
+      "title": "A Morte de Robin Hood",
+      "release_date": "2026-06-18",
+      "backdrop_path": "/lh3BDkmWJh998n4fQcHYcVi7dpm.jpg",
+      "poster_path": "/o0QndnepFPWget2kdKpzh26RBYt.jpg",
+      "vote_average": 6.5
+    },
+    {
+      "id": 1083381,
+      "title": "Backrooms: Um Não-Lugar",
+      "release_date": "2026-05-27",
+      "backdrop_path": "/dqmMWNWfLnExDRpMtIMqI97GQFR.jpg",
+      "poster_path": "/qEl4BDBTGnhLiadZx0c9nHM8vBF.jpg",
+      "vote_average": 7.1
+    },
+    {
+      "id": 1275779,
+      "title": "Dia D",
+      "release_date": "2026-06-10",
+      "backdrop_path": "/flxau5Iu7bChQHsESqvGZ3FQRaI.jpg",
+      "poster_path": "/pmff1wjKrgJi92PPr346lAifzlg.jpg",
+      "vote_average": 7.4
+    },
+    {
+      "id": 1404304,
+      "title": "The Isolate Thief",
+      "release_date": "2026-07-10",
+      "backdrop_path": "/mwqxKmbW6ssqa5CKHrgocqbkL0C.jpg",
+      "poster_path": "/gmmCh2BvTKp0YGT2FYG0eOQJELi.jpg",
+      "vote_average": 7.5
+    },
+    {
+      "id": 687163,
+      "title": "Devoradores de Estrelas",
+      "release_date": "2026-03-15",
+      "backdrop_path": "/8Tfys3mDZVp4tNoH2ktm06a0Tau.jpg",
+      "poster_path": "/2i8uru7rlbHKaoIbC2V4FZLT7uW.jpg",
+      "vote_average": 8.657
+    }
+  ]
+}

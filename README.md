@@ -1,51 +1,31 @@
 # LaysFlix
 
-PWA pessoal para organizar filmes e séries usando dados do TMDB. A biblioteca, a chave do TMDB e o progresso ficam armazenados somente no navegador do aparelho.
+PWA pessoal premium para acompanhar filmes, séries, temporadas e episódios usando dados do TMDB.
 
-## Publicar no GitHub Pages
+## Funcionalidades
 
-1. No GitHub, crie um repositório público chamado `laysflix`.
-2. Envie **todo o conteúdo desta pasta** para a raiz do repositório, mantendo as pastas e os nomes dos arquivos.
-3. Abra **Settings → Pages** no repositório.
-4. Em **Build and deployment**, selecione **Deploy from a branch**.
-5. Escolha a branch `main`, a pasta `/ (root)` e clique em **Save**.
-6. Aguarde alguns minutos. O endereço será `https://SEU-USUARIO.github.io/laysflix/`.
+- Histórico inicial do TV Time, progresso reversível e próximo episódio.
+- Intro cinematográfica com filmes em alta, atualizada diariamente.
+- Imagem, sinopse, duração, data e nota de cada episódio.
+- Onde assistir no Brasil, com disponibilidade fornecida pelo JustWatch via TMDB.
+- Calendário interno, Dashboard, diário, avaliações, listas e recomendações.
+- Backup completo, migração versionada e lixeira local de 30 dias.
+- PWA otimizado para iPhone, safe areas, gestos e funcionamento offline da interface.
 
-Os caminhos do manifest e do service worker são relativos, portanto funcionam corretamente dentro da subpasta do GitHub Pages.
+## GitHub Pages e TMDB
 
-## Configurar o TMDB pelo GitHub Secret
+O workflow `.github/workflows/deploy-pages.yml` publica automaticamente a branch `main` e atualiza diariamente o feed da intro. Crie um Actions Secret chamado `TOKEN_TMDB` com o Token de Leitura do TMDB e execute **Actions → Publicar LaysFlix no GitHub Pages → Run workflow**.
 
-1. Abra **Settings → Secrets and variables → Actions**.
-2. Clique em **New repository secret**.
-3. Use o nome `TOKEN_TMDB` (o nome legado `TMDB_TOKEN` também é aceito).
-4. Cole o **Token de Leitura da API** do TMDB e salve.
-5. Abra **Actions → Publicar LaysFlix no GitHub Pages**.
-6. Clique em **Run workflow → Run workflow**.
-7. Aguarde a execução ficar verde. O LaysFlix passará a carregar o catálogo automaticamente, sem pedir o token no iPhone.
-
-O workflow usa o Secret somente durante a publicação. O valor não é gravado nos arquivos-fonte ou no histórico Git do repositório.
+Como o LaysFlix é um aplicativo estático executado no navegador, a credencial usada nas consultas do cliente faz parte do artefato publicado. Use exclusivamente uma credencial de leitura do TMDB, sem permissões de conta, e faça a rotação caso o repositório deixe de ser de uso pessoal.
 
 ## Instalar no iPhone
 
-1. Abra o endereço publicado no **Safari**.
-2. Toque no botão **Compartilhar** (quadrado com seta para cima).
-3. Role a lista e toque em **Adicionar à Tela de Início**.
-4. Confirme o nome `LaysFlix` e toque em **Adicionar**.
-5. Abra o novo ícone, toque na engrenagem e informe a chave da API ou o token de leitura do TMDB.
+1. Abra `https://rogerio-ops97.github.io/laysflix/` no Safari.
+2. Toque em **Compartilhar → Adicionar à Tela de Início**.
+3. Confirme o nome LaysFlix e abra pelo novo ícone.
 
-Se a opção não aparecer, confirme que a página foi aberta no Safari, e não dentro do navegador de outro aplicativo.
-
-## Atualizações e dados
-
-- Após o primeiro carregamento, a interface básica funciona offline. Pesquisas e imagens do TMDB precisam de internet.
-- A chave e a biblioteca ficam no aparelho. Limpar os dados do Safari remove essas informações.
-- Use **Exportar backup** regularmente e guarde o arquivo em local seguro.
-- Para atualizar o app, substitua os arquivos no GitHub. Se o iPhone mantiver uma versão antiga, feche o app, abra a URL no Safari e recarregue a página.
-
-## Segurança da chave
-
-Não coloque a chave do TMDB em `app.js` nem em outro arquivo do repositório. O app pede a chave no próprio aparelho e a salva no armazenamento local.
+Após uma atualização, feche completamente o PWA e abra novamente. O histórico e as preferências permanecem no aparelho; exporte backups regularmente em **Perfil e ajustes**.
 
 ## Créditos
 
-Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
+Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB. Dados de disponibilidade de streaming são fornecidos pelo JustWatch via TMDB.
