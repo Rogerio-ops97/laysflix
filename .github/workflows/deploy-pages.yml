@@ -27,6 +27,17 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Preparar acesso ao TMDB
+        env:
+          TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
+          BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          if [ -z "$TMDB_TOKEN" ]; then
+            echo "::error::Crie o secret TMDB_TOKEN em Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          node -e "const fs=require('fs'); fs.writeFileSync('config.js', 'window.LAYSFLIX_TMDB_TOKEN = ' + JSON.stringify(process.env.TMDB_TOKEN) + ';\n')"
+          node -e "const fs=require('fs'); const p='index.html'; fs.writeFileSync(p, fs.readFileSync(p,'utf8').replace('__BUILD_ID__', process.env.BUILD_ID))"
       - name: Preparar site
         uses: actions/upload-pages-artifact@v4
         with:

@@ -13,6 +13,18 @@ PWA pessoal para organizar filmes e séries usando dados do TMDB. A biblioteca, 
 
 Os caminhos do manifest e do service worker são relativos, portanto funcionam corretamente dentro da subpasta do GitHub Pages.
 
+## Configurar o TMDB pelo GitHub Secret
+
+1. Abra **Settings → Secrets and variables → Actions**.
+2. Clique em **New repository secret**.
+3. Use exatamente o nome `TMDB_TOKEN`.
+4. Cole o **Token de Leitura da API** do TMDB e salve.
+5. Abra **Actions → Publicar LaysFlix no GitHub Pages**.
+6. Clique em **Run workflow → Run workflow**.
+7. Aguarde a execução ficar verde. O LaysFlix passará a carregar o catálogo automaticamente, sem pedir o token no iPhone.
+
+O workflow usa o Secret somente durante a publicação. O valor não é gravado nos arquivos-fonte ou no histórico Git do repositório.
+
 ## Instalar no iPhone
 
 1. Abra o endereço publicado no **Safari**.
