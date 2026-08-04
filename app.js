@@ -37,5 +37,5 @@ $('#settings .close').onclick=()=>$('#settings').close();$('#saveKey').onclick=(
 $('#exportData').onclick=()=>{const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),library},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`laysflix-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)};
 $('#importData').onchange=async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(!Array.isArray(data.library))throw 0;library=data.library;save();$('#settings').close();switchView('library');toast('Backup importado')}catch{toast('Backup inválido')}};
 addEventListener('popstate',()=>{if($('#detailPage').classList.contains('open'))closeDetail();else if($('#searchPage').classList.contains('open'))closeSearch()});
-if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=3'));
 renderHome();loadHome();
