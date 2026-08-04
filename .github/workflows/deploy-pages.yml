@@ -38,6 +38,8 @@ jobs:
           fi
           node -e "const fs=require('fs'); fs.writeFileSync('config.js', 'window.LAYSFLIX_TMDB_TOKEN = ' + JSON.stringify(process.env.TMDB_TOKEN) + ';\n')"
           node -e "const fs=require('fs'); const p='index.html'; fs.writeFileSync(p, fs.readFileSync(p,'utf8').replace('__BUILD_ID__', process.env.BUILD_ID))"
+          node -e "const fs=require('fs'); fs.appendFileSync('config.js', 'window.LAYSFLIX_BUILD_ID = ' + JSON.stringify(process.env.BUILD_ID) + ';\n')"
+          node scripts/resolve-history.mjs
       - name: Preparar site
         uses: actions/upload-pages-artifact@v4
         with:

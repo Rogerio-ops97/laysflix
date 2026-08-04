@@ -10,10 +10,12 @@
   <meta name="apple-mobile-web-app-title" content="LaysFlix">
   <link rel="manifest" href="manifest.webmanifest?v=3">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="v5.css?v=5">
   <title>LaysFlix</title>
 </head>
 <body>
+  <div id="intro" class="intro" aria-label="LaysFlix carregando"><div class="intro-glow"></div><img src="icons/icon-512.png" alt=""><h1>LaysFlix</h1><p>Seu cinema. Sua história.</p><button id="skipIntro">Pular</button></div>
   <div id="app">
     <header class="topbar"><button id="brandButton" class="brand"><img src="icons/icon-192.png" alt=""><span>LaysFlix</span></button><div class="top-actions"><button id="searchButton" class="icon-button" aria-label="Buscar">⌕</button><button id="settingsButton" class="avatar" aria-label="Perfil e ajustes">L</button></div></header>
     <main id="main"></main>
@@ -21,7 +23,7 @@
       <button data-view="home" class="active"><span>⌂</span><small>Início</small></button>
       <button data-view="discover"><span>⌕</span><small>Descobrir</small></button>
       <button data-view="library"><span>▦</span><small>Biblioteca</small></button>
-      <button data-view="profile"><span>◎</span><small>Perfil</small></button>
+      <button data-view="profile"><span>◉</span><small>Dashboard</small></button>
     </nav>
   </div>
   <section id="detailPage" class="page-layer" aria-hidden="true"><div id="detailContent"></div></section>
@@ -29,6 +31,6 @@
   <dialog id="settings"><button class="close" aria-label="Fechar">×</button><div class="settings-brand"><img src="icons/icon-192.png" alt=""><div><h2>LaysFlix</h2><p>Seu cinema, do seu jeito.</p></div></div><label>Token de leitura ou chave do TMDB<input id="tmdbKey" type="password" autocomplete="off" placeholder="Cole aqui"></label><p class="hint">Guardado somente neste iPhone. Nunca é publicado no GitHub.</p><button id="saveKey" class="primary full">Salvar acesso</button><div class="setting-actions"><button id="exportData">Exportar backup</button><label class="file">Importar backup<input id="importData" type="file" accept="application/json"></label></div><p class="tmdb-credit">Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.</p></dialog>
   <div id="toast" role="status"></div>
   <script src="config.js?build=__BUILD_ID__"></script>
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>
