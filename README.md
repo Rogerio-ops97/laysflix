@@ -17,7 +17,7 @@ Os caminhos do manifest e do service worker são relativos, portanto funcionam c
 
 1. Abra **Settings → Secrets and variables → Actions**.
 2. Clique em **New repository secret**.
-3. Use exatamente o nome `TMDB_TOKEN`.
+3. Use o nome `TOKEN_TMDB` (o nome legado `TMDB_TOKEN` também é aceito).
 4. Cole o **Token de Leitura da API** do TMDB e salve.
 5. Abra **Actions → Publicar LaysFlix no GitHub Pages**.
 6. Clique em **Run workflow → Run workflow**.

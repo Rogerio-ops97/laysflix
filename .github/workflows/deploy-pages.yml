@@ -29,11 +29,11 @@ jobs:
           enablement: true
       - name: Preparar acesso ao TMDB
         env:
-          TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
+          TMDB_TOKEN: ${{ secrets.TOKEN_TMDB || secrets.TMDB_TOKEN }}
           BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           if [ -z "$TMDB_TOKEN" ]; then
-            echo "::error::Crie o secret TMDB_TOKEN em Settings > Secrets and variables > Actions."
+            echo "::error::Crie o secret TOKEN_TMDB em Settings > Secrets and variables > Actions."
             exit 1
           fi
           node -e "const fs=require('fs'); fs.writeFileSync('config.js', 'window.LAYSFLIX_TMDB_TOKEN = ' + JSON.stringify(process.env.TMDB_TOKEN) + ';\n')"
