@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 
 const token=process.env.TMDB_TOKEN;
 if(!token) throw new Error('TMDB_TOKEN não configurado');
-const source=JSON.parse(await fs.readFile('history-source.json','utf8'));
+const source=JSON.parse((await fs.readFile('history-source.json','utf8')).replace(/^\uFEFF/,''));
 const headers={accept:'application/json',Authorization:`Bearer ${token}`};
 const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const request=async path=>{const response=await fetch(`https://api.themoviedb.org/3${path}`,{headers});if(!response.ok)throw new Error(`TMDB ${response.status}`);return response.json()};
