@@ -5,7 +5,7 @@ const CONFIRMATION_REDIRECT=`${APP_URL}?auth=confirmed`;
 const RECOVERY_REDIRECT=`${APP_URL}?auth=recovery`;
 const RESEND_COOLDOWN_KEY='laysflix-auth-resend-after';
 const REMEMBER_SESSION_KEY='laysflix-auth-remember';
-let client=null,hooks=null,currentUser=null,currentProfileKind='standard',syncTimer=null,authArtTimer=null,resendTimer=null,bound=false,authArtStarted=false,lastCloudState='offline';
+let client=null,hooks=null,currentUser=null,currentProfileKind='standard',recoverySession=null,syncTimer=null,authArtTimer=null,resendTimer=null,bound=false,authArtStarted=false,lastCloudState='offline';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalizeKind=value=>value==='lays'?'lays':'standard';
 const byUpdated=(left,right)=>Number(right?.updatedAt||0)>=Number(left?.updatedAt||0)?right:left;
@@ -32,6 +32,8 @@ function setStatus(status,message=''){
 function showAuth(show,message=''){const page=document.querySelector('#authPage');if(!page)return;page.classList.toggle('open',show);page.setAttribute('aria-hidden',String(!show));const output=document.querySelector('#authMessage');if(output&&message)output.textContent=message}
 function authMessage(message,error=false){const output=document.querySelector('#authMessage');if(output){output.textContent=message;output.classList.toggle('error',error)}}
 function showConfirmationHelp(show){const button=document.querySelector('#resendConfirmation');if(button)button.hidden=!show}
+function hasRecoveryIntent(){return new URL(location.href).searchParams.get('auth')==='recovery'}
+function cleanAuthUrl(){const url=new URL(location.href);url.searchParams.delete('auth');history.replaceState({},'',`${url.pathname}${url.search}`)}
 function friendlyAuthError(error){
   const raw=String(error?.message||error||'').toLowerCase(),code=String(error?.code||'').toLowerCase();
   if(raw.includes('rate limit')||code.includes('rate_limit')||code.includes('over_email_send'))return 'O limite de e-mails do servidor gratuito foi atingido. Aguarde a liberação da cota antes de criar outra conta ou reenviar a confirmação.';
@@ -39,6 +41,7 @@ function friendlyAuthError(error){
   if(raw.includes('invalid login credentials')||code==='invalid_credentials')return 'E-mail ou senha incorretos.';
   if(raw.includes('user already registered')||code==='user_already_exists')return 'Já existe uma conta com este e-mail. Entre com sua senha ou recupere o acesso.';
   if(raw.includes('password')&&(raw.includes('weak')||raw.includes('least')))return 'Escolha uma senha mais forte, com pelo menos 6 caracteres.';
+  if(raw.includes('expired')||raw.includes('invalid')&&raw.includes('token'))return 'Este link expirou ou já foi usado. Solicite uma nova redefinição de senha.';
   if(raw.includes('email')&&raw.includes('invalid'))return 'Digite um endereço de e-mail válido.';
   if(raw.includes('network')||raw.includes('fetch'))return 'Não foi possível conectar agora. Confira sua internet e tente novamente.';
   return 'Não foi possível concluir agora. Tente novamente em alguns instantes.';
@@ -61,7 +64,7 @@ function restoreResendCooldown(){
   const until=Number(localStorage.getItem(RESEND_COOLDOWN_KEY)||0),remaining=Math.ceil((until-Date.now())/1000);
   if(remaining>0)startResendCooldown(remaining);else localStorage.removeItem(RESEND_COOLDOWN_KEY);
 }
-function setAuthBusy(busy){const button=document.querySelector('#authSubmit');if(button){button.disabled=busy;button.textContent=busy?'Aguarde…':document.querySelector('#authPage')?.dataset.mode==='signup'?'Criar conta':'Entrar'}}
+function setAuthBusy(busy){const page=document.querySelector('#authPage'),mode=page?.dataset.mode,button=mode==='recovery'?document.querySelector('#passwordResetSubmit'):document.querySelector('#authSubmit');if(button){button.disabled=busy;button.textContent=busy?'Aguarde…':mode==='recovery'?'Salvar nova senha':mode==='signup'?'Criar conta':'Entrar'}}
 async function startAuthArtwork(){
   if(authArtStarted)return;
   authArtStarted=true;
@@ -117,15 +120,30 @@ async function connectSession(session){
   await pushNow();
 }
 async function disconnect(){clearTimeout(syncTimer);currentUser=null;currentProfileKind='standard';hooks?.onSession?.(null);setStatus('offline','Entre para sincronizar');showAuth(true)}
+function showPasswordReset(session){
+  recoverySession=session||recoverySession;
+  currentUser=null;
+  hooks?.onSession?.(null);
+  setStatus('offline','Defina sua nova senha');
+  setMode(document.querySelector('#authPage'),'recovery');
+  showAuth(true);
+  authMessage(recoverySession?.user?'Crie uma nova senha com pelo menos 8 caracteres.':'O link não pôde ser validado. Solicite uma nova redefinição.',!recoverySession?.user);
+}
 function setMode(page,mode){
-  const signup=mode==='signup';
+  const signup=mode==='signup',recovery=mode==='recovery';
   page.dataset.mode=mode;
+  const modes=document.querySelector('.auth-modes'),authForm=document.querySelector('#authForm'),resetForm=document.querySelector('#passwordResetForm'),cancel=document.querySelector('#cancelPasswordReset'),offline=document.querySelector('#authOffline');
+  if(modes)modes.hidden=recovery;
+  if(authForm)authForm.hidden=recovery;
+  if(resetForm)resetForm.hidden=!recovery;
+  if(cancel)cancel.hidden=!recovery;
+  if(offline)offline.hidden=recovery;
   page.querySelectorAll('[data-auth-mode]').forEach(item=>item.classList.toggle('active',item.dataset.authMode===mode));
   document.querySelector('#authSubmit').textContent=signup?'Criar conta':'Entrar';
-  document.querySelector('.auth-panel h1').textContent=signup?'Crie seu perfil':'Entre no LaysFlix';
-  document.querySelector('.auth-panel>p').textContent=signup?'Crie sua conta e comece uma biblioteca totalmente nova.':'Sincronize filmes, séries, episódios e notas entre seu celular e computador.';
+  document.querySelector('.auth-panel h1').textContent=recovery?'Crie uma nova senha':signup?'Crie seu perfil':'Entre no LaysFlix';
+  document.querySelector('.auth-panel>p').textContent=recovery?'Proteja sua conta com uma senha nova e exclusiva.':signup?'Crie sua conta e comece uma biblioteca totalmente nova.':'Sincronize filmes, séries, episódios e notas entre seu celular e computador.';
   document.querySelector('#authPassword').autocomplete=signup?'new-password':'current-password';
-  document.querySelector('#forgotPassword').hidden=signup;
+  document.querySelector('#forgotPassword').hidden=signup||recovery;
   showConfirmationHelp(false);
   authMessage('');
 }
@@ -166,9 +184,27 @@ function bindAuth(){
   document.querySelector('#openAuth').onclick=async()=>{if(currentUser)await pushNow();document.querySelector('#settings')?.close();setMode(page,'login');showAuth(true)};
   document.querySelector('#syncNow').onclick=pushNow;
   document.querySelector('#signOut').onclick=async()=>{await pushNow();await client.auth.signOut()};
-  document.querySelector('#forgotPassword').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite seu e-mail primeiro.',true);const button=document.querySelector('#forgotPassword');button.disabled=true;const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:RECOVERY_REDIRECT});button.disabled=false;authMessage(error?friendlyAuthError(error):'Enviamos as instruções para seu e-mail.',!!error)};
+  document.querySelector('#forgotPassword').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite seu e-mail primeiro.',true);const button=document.querySelector('#forgotPassword');button.disabled=true;const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:RECOVERY_REDIRECT});button.disabled=false;authMessage(error?friendlyAuthError(error):'Se este e-mail estiver cadastrado, você receberá um link para criar uma nova senha.',!!error)};
+  document.querySelector('#passwordResetForm').onsubmit=async event=>{
+    event.preventDefault();
+    const password=document.querySelector('#newPassword').value,confirmation=document.querySelector('#confirmNewPassword').value;
+    if(password.length<8)return authMessage('A nova senha precisa ter pelo menos 8 caracteres.',true);
+    if(password!==confirmation)return authMessage('As duas senhas precisam ser iguais.',true);
+    if(!recoverySession?.user)return authMessage('Este link não é mais válido. Solicite uma nova redefinição.',true);
+    setAuthBusy(true);
+    const {data,error}=await client.auth.updateUser({password});
+    setAuthBusy(false);
+    if(error)return authMessage(friendlyAuthError(error),true);
+    const sessionUser=data?.user||recoverySession.user;
+    recoverySession=null;
+    cleanAuthUrl();
+    document.querySelector('#passwordResetForm').reset();
+    authMessage('Senha alterada com sucesso. Entrando no LaysFlix…');
+    setTimeout(()=>connectSession({user:sessionUser}),550);
+  };
+  document.querySelector('#cancelPasswordReset').onclick=async()=>{recoverySession=null;cleanAuthUrl();await client.auth.signOut();setMode(page,'login');showAuth(true)};
   document.querySelector('#resendConfirmation').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite o e-mail da conta primeiro.',true);const button=document.querySelector('#resendConfirmation');button.disabled=true;const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:CONFIRMATION_REDIRECT}});startResendCooldown(90);authMessage(error?friendlyAuthError(error):'Novo e-mail enviado. Abra somente o link mais recente.',!!error)};
 }
-async function init(appHooks){hooks=appHooks;startAuthArtwork();const url=window.LAYSFLIX_SUPABASE_URL,key=window.LAYSFLIX_SUPABASE_PUBLISHABLE_KEY;if(!url||!key||!window.supabase?.createClient){setStatus('offline','Nuvem indisponível');return}client=window.supabase.createClient(url,key,{auth:{persistSession:true,storage:authStorage,autoRefreshToken:true,detectSessionInUrl:true}});bindAuth();const {data:{session}}=await client.auth.getSession();if(session)await connectSession(session);else{hooks.onSession?.(null);showAuth(true);setStatus('offline','Entre para sincronizar')}client.auth.onAuthStateChange((event,next)=>setTimeout(()=>next?connectSession(next):disconnect(),0));addEventListener('online',()=>currentUser?pushNow():setStatus('offline'));addEventListener('offline',()=>setStatus('offline'));addEventListener('visibilitychange',()=>{if(!currentUser)return;document.visibilityState==='visible'?connectSession({user:currentUser}):pushNow()});addEventListener('pagehide',()=>{if(currentUser)pushNow()})}
+async function init(appHooks){hooks=appHooks;startAuthArtwork();const url=window.LAYSFLIX_SUPABASE_URL,key=window.LAYSFLIX_SUPABASE_PUBLISHABLE_KEY;if(!url||!key||!window.supabase?.createClient){setStatus('offline','Nuvem indisponível');return}client=window.supabase.createClient(url,key,{auth:{persistSession:true,storage:authStorage,autoRefreshToken:true,detectSessionInUrl:true}});bindAuth();const {data:{session}}=await client.auth.getSession();if(hasRecoveryIntent())showPasswordReset(session);else if(session)await connectSession(session);else{hooks.onSession?.(null);showAuth(true);setStatus('offline','Entre para sincronizar')}client.auth.onAuthStateChange((event,next)=>setTimeout(()=>{const recoveryMode=document.querySelector('#authPage')?.dataset.mode==='recovery';if(event==='PASSWORD_RECOVERY'||hasRecoveryIntent()&&!recoveryMode)return showPasswordReset(next);if(recoveryMode)return;next?connectSession(next):disconnect()},0));addEventListener('online',()=>currentUser?pushNow():setStatus('offline'));addEventListener('offline',()=>setStatus('offline'));addEventListener('visibilitychange',()=>{if(!currentUser)return;document.visibilityState==='visible'?connectSession({user:currentUser}):pushNow()});addEventListener('pagehide',()=>{if(currentUser)pushNow()})}
 window.LaysFlixCloud={init,queue,pushNow,get user(){return currentUser},get status(){return lastCloudState},get profileKind(){return currentProfileKind}};
 })();
