@@ -30,6 +30,13 @@ Após uma atualização, feche completamente o PWA e abra novamente. O históric
 
 O LaysFlix usa Supabase Auth e a tabela `public.laysflix_user_states` para manter uma cópia privada da biblioteca de cada usuário. O aplicativo continua offline-first: alterações são salvas imediatamente no aparelho e enviadas à nuvem quando houver sessão e internet.
 
+Ao criar uma conta, o usuário escolhe como o perfil deve nascer:
+
+- **Novo perfil:** biblioteca completamente vazia.
+- **Perfil da Lays:** recebe uma cópia do histórico consolidado do TV Time somente na primeira inicialização.
+
+Depois disso, cada perfil evolui de forma independente. A escolha fica registrada no banco e nunca é inferida a partir dos dados locais de outro usuário.
+
 - URL e chave publicável: `cloud-config.js`.
 - Cliente fixado: `@supabase/supabase-js@2.111.0`.
 - Schema e políticas RLS: `supabase/schema.sql`.

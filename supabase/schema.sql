@@ -1,6 +1,7 @@
 create table public.laysflix_user_states (
   user_id uuid primary key references auth.users(id) on delete cascade,
   state jsonb not null default '{}'::jsonb check (jsonb_typeof(state) = 'object'),
+  profile_kind text not null default 'standard' check (profile_kind in ('standard', 'lays')),
   revision bigint not null default 1 check (revision > 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
