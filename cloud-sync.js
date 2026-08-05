@@ -2,10 +2,13 @@
 const TABLE='laysflix_user_states';
 const AUTH_REDIRECT='https://rogerio-ops97.github.io/laysflix/';
 const RESEND_COOLDOWN_KEY='laysflix-auth-resend-after';
+const REMEMBER_SESSION_KEY='laysflix-auth-remember';
 let client=null,hooks=null,currentUser=null,currentProfileKind='standard',syncTimer=null,authArtTimer=null,resendTimer=null,bound=false,authArtStarted=false,lastCloudState='offline';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalizeKind=value=>value==='lays'?'lays':'standard';
 const byUpdated=(left,right)=>Number(right?.updatedAt||0)>=Number(left?.updatedAt||0)?right:left;
+const rememberSession=()=>localStorage.getItem(REMEMBER_SESSION_KEY)!=='false';
+const authStorage={getItem:key=>rememberSession()?localStorage.getItem(key):sessionStorage.getItem(key),setItem:(key,value)=>{const primary=rememberSession()?localStorage:sessionStorage,secondary=rememberSession()?sessionStorage:localStorage;primary.setItem(key,value);secondary.removeItem(key)},removeItem:key=>{localStorage.removeItem(key);sessionStorage.removeItem(key)}};
 function mergeKeyed(left=[],right=[],keyOf){const items=new Map;[...left,...right].forEach(item=>{const key=keyOf(item);if(!key)return;items.set(key,items.has(key)?byUpdated(items.get(key),item):item)});return [...items.values()]}
 function mergeStates(local={},remote={}){const dismissed=[...new Set([...(local.dismissed||[]),...(remote.dismissed||[])])],blocked=new Set(dismissed),library=mergeKeyed(local.library,remote.library,item=>`${item.media_type||item.type||(item.name?'tv':'movie')}:${item.id}`).filter(item=>!blocked.has(`${item.media_type||item.type||(item.name?'tv':'movie')}:${item.id}`)),diary={...(local.diary||{})};Object.entries(remote.diary||{}).forEach(([key,value])=>diary[key]=diary[key]?byUpdated(diary[key],value):value);return {...local,...remote,library,diary,dismissed,watchEvents:mergeKeyed(local.watchEvents,remote.watchEvents,item=>item.id),trash:mergeKeyed(local.trash,remote.trash,item=>`${item.deletedAt}:${item.item?.id}`),lists:mergeKeyed(local.lists,remote.lists,item=>item.id)} }
 function setStatus(status,message=''){
@@ -115,12 +118,16 @@ function bindAuth(){
   if(bound)return;
   bound=true;
   const page=document.querySelector('#authPage'),form=document.querySelector('#authForm');
+  const remember=document.querySelector('#authRemember');
+  remember.checked=rememberSession();
+  remember.onchange=()=>localStorage.setItem(REMEMBER_SESSION_KEY,String(remember.checked));
   restoreResendCooldown();
   page?.querySelectorAll('[data-auth-mode]').forEach(button=>button.onclick=()=>setMode(page,button.dataset.authMode));
   form.onsubmit=async event=>{
     event.preventDefault();
     const email=document.querySelector('#authEmail').value.trim(),password=document.querySelector('#authPassword').value,signup=page.dataset.mode==='signup';
     if(!email||password.length<6)return authMessage('Informe um e-mail e uma senha com pelo menos 6 caracteres.',true);
+    localStorage.setItem(REMEMBER_SESSION_KEY,String(remember.checked));
     setAuthBusy(true);
     const result=signup?await client.auth.signUp({email,password,options:{emailRedirectTo:AUTH_REDIRECT}}):await client.auth.signInWithPassword({email,password});
     setAuthBusy(false);
@@ -135,6 +142,6 @@ function bindAuth(){
   document.querySelector('#forgotPassword').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite seu e-mail primeiro.',true);const button=document.querySelector('#forgotPassword');button.disabled=true;const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:AUTH_REDIRECT});button.disabled=false;authMessage(error?friendlyAuthError(error):'Enviamos as instruções para seu e-mail.',!!error)};
   document.querySelector('#resendConfirmation').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite o e-mail da conta primeiro.',true);const button=document.querySelector('#resendConfirmation');button.disabled=true;const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:AUTH_REDIRECT}});startResendCooldown(60);authMessage(error?friendlyAuthError(error):'Novo e-mail enviado. Abra somente o link mais recente.',!!error)};
 }
-async function init(appHooks){hooks=appHooks;startAuthArtwork();const url=window.LAYSFLIX_SUPABASE_URL,key=window.LAYSFLIX_SUPABASE_PUBLISHABLE_KEY;if(!url||!key||!window.supabase?.createClient){setStatus('offline','Nuvem indisponível');return}client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});bindAuth();const {data:{session}}=await client.auth.getSession();if(session)await connectSession(session);else{hooks.onSession?.(null);showAuth(true);setStatus('offline','Entre para sincronizar')}client.auth.onAuthStateChange((event,next)=>setTimeout(()=>next?connectSession(next):disconnect(),0));addEventListener('online',()=>currentUser?pushNow():setStatus('offline'));addEventListener('offline',()=>setStatus('offline'));addEventListener('visibilitychange',()=>{if(!currentUser)return;document.visibilityState==='visible'?connectSession({user:currentUser}):pushNow()});addEventListener('pagehide',()=>{if(currentUser)pushNow()})}
+async function init(appHooks){hooks=appHooks;startAuthArtwork();const url=window.LAYSFLIX_SUPABASE_URL,key=window.LAYSFLIX_SUPABASE_PUBLISHABLE_KEY;if(!url||!key||!window.supabase?.createClient){setStatus('offline','Nuvem indisponível');return}client=window.supabase.createClient(url,key,{auth:{persistSession:true,storage:authStorage,autoRefreshToken:true,detectSessionInUrl:true}});bindAuth();const {data:{session}}=await client.auth.getSession();if(session)await connectSession(session);else{hooks.onSession?.(null);showAuth(true);setStatus('offline','Entre para sincronizar')}client.auth.onAuthStateChange((event,next)=>setTimeout(()=>next?connectSession(next):disconnect(),0));addEventListener('online',()=>currentUser?pushNow():setStatus('offline'));addEventListener('offline',()=>setStatus('offline'));addEventListener('visibilitychange',()=>{if(!currentUser)return;document.visibilityState==='visible'?connectSession({user:currentUser}):pushNow()});addEventListener('pagehide',()=>{if(currentUser)pushNow()})}
 window.LaysFlixCloud={init,queue,pushNow,get user(){return currentUser},get status(){return lastCloudState},get profileKind(){return currentProfileKind}};
 })();
