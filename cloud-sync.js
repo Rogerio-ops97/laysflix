@@ -2,7 +2,7 @@
 const TABLE='laysflix_user_states';
 const PENDING_PROFILE='laysflix.pending-profile.';
 const AUTH_REDIRECT='https://rogerio-ops97.github.io/laysflix/';
-let client=null,hooks=null,currentUser=null,currentProfileKind='standard',syncTimer=null,bound=false,lastCloudState='offline';
+let client=null,hooks=null,currentUser=null,currentProfileKind='standard',syncTimer=null,authArtTimer=null,bound=false,authArtStarted=false,lastCloudState='offline';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalizeKind=value=>value==='lays'?'lays':'standard';
 const emailKey=email=>`${PENDING_PROFILE}${String(email||'').trim().toLowerCase()}`;
@@ -28,6 +28,32 @@ function setStatus(status,message=''){
 function showAuth(show,message=''){const page=document.querySelector('#authPage');if(!page)return;page.classList.toggle('open',show);page.setAttribute('aria-hidden',String(!show));const output=document.querySelector('#authMessage');if(output&&message)output.textContent=message}
 function authMessage(message,error=false){const output=document.querySelector('#authMessage');if(output){output.textContent=message;output.classList.toggle('error',error)}}
 function setAuthBusy(busy){const button=document.querySelector('#authSubmit');if(button){button.disabled=busy;button.textContent=busy?'Aguarde…':document.querySelector('#authPage')?.dataset.mode==='signup'?'Criar conta':'Entrar'}}
+async function startAuthArtwork(){
+  if(authArtStarted)return;
+  authArtStarted=true;
+  const frames=[...document.querySelectorAll('.auth-art-frame')];
+  if(frames.length<2)return;
+  try{
+    const response=await fetch(`intro-feed.json?build=${encodeURIComponent(window.LAYSFLIX_BUILD_ID||'daily')}`,{cache:'no-store'});
+    if(!response.ok)return;
+    const feed=await response.json(),available=(feed.items||[]).filter(item=>item.backdrop_path);
+    if(!available.length)return;
+    const offset=Math.floor(Date.now()/864e5)%available.length,items=[...available.slice(offset),...available.slice(0,offset)].slice(0,10);
+    let active=0,index=0,loading=false;
+    const next=()=>{
+      if(loading||document.hidden)return;
+      loading=true;
+      const item=items[index++%items.length],url=`https://image.tmdb.org/t/p/w1280${item.backdrop_path}`,preload=new Image();
+      preload.decoding='async';
+      preload.onload=()=>{const incoming=active?0:1;frames[incoming].style.backgroundImage=`url('${url}')`;requestAnimationFrame(()=>{frames[incoming].classList.add('active');frames[active].classList.remove('active');active=incoming;loading=false})};
+      preload.onerror=()=>{loading=false};
+      preload.src=url;
+    };
+    next();
+    authArtTimer=setInterval(next,7800);
+    addEventListener('visibilitychange',()=>{if(!document.hidden)next()});
+  }catch{}
+}
 async function pushNow(){clearTimeout(syncTimer);if(!client||!currentUser||!hooks)return;setStatus('syncing');const payload=clone(hooks.getState());payload.preferences={...(payload.preferences||{}),profileKind:currentProfileKind};const {error}=await client.from(TABLE).upsert({user_id:currentUser.id,profile_kind:currentProfileKind,state:payload,revision:Date.now(),updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error){setStatus(navigator.onLine?'error':'offline',error.message);return false}localStorage.removeItem(emailKey(currentUser.email));setStatus('synced');return true}
 function queue(){if(!currentUser)return;setStatus(navigator.onLine?'syncing':'offline');clearTimeout(syncTimer);syncTimer=setTimeout(pushNow,900)}
 async function connectSession(session){
@@ -85,6 +111,6 @@ function bindAuth(){
   document.querySelector('#forgotPassword').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite seu e-mail primeiro.',true);const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:AUTH_REDIRECT});authMessage(error?error.message:'Enviamos as instruções para seu e-mail.',!!error)};
   document.querySelector('#resendConfirmation').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite o e-mail da conta primeiro.',true);const button=document.querySelector('#resendConfirmation');button.disabled=true;const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:AUTH_REDIRECT}});button.disabled=false;authMessage(error?error.message:'Novo e-mail enviado. Abra o link mais recente.',!!error)};
 }
-async function init(appHooks){hooks=appHooks;const url=window.LAYSFLIX_SUPABASE_URL,key=window.LAYSFLIX_SUPABASE_PUBLISHABLE_KEY;if(!url||!key||!window.supabase?.createClient){setStatus('offline','Nuvem indisponível');return}client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});bindAuth();const {data:{session}}=await client.auth.getSession();if(session)await connectSession(session);else{hooks.onSession?.(null);showAuth(true);setStatus('offline','Entre para sincronizar')}client.auth.onAuthStateChange((event,next)=>setTimeout(()=>next?connectSession(next):disconnect(),0));addEventListener('online',()=>currentUser?pushNow():setStatus('offline'));addEventListener('offline',()=>setStatus('offline'));addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser)connectSession({user:currentUser})})}
+async function init(appHooks){hooks=appHooks;startAuthArtwork();const url=window.LAYSFLIX_SUPABASE_URL,key=window.LAYSFLIX_SUPABASE_PUBLISHABLE_KEY;if(!url||!key||!window.supabase?.createClient){setStatus('offline','Nuvem indisponível');return}client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});bindAuth();const {data:{session}}=await client.auth.getSession();if(session)await connectSession(session);else{hooks.onSession?.(null);showAuth(true);setStatus('offline','Entre para sincronizar')}client.auth.onAuthStateChange((event,next)=>setTimeout(()=>next?connectSession(next):disconnect(),0));addEventListener('online',()=>currentUser?pushNow():setStatus('offline'));addEventListener('offline',()=>setStatus('offline'));addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser)connectSession({user:currentUser})})}
 window.LaysFlixCloud={init,queue,pushNow,get user(){return currentUser},get status(){return lastCloudState},get profileKind(){return currentProfileKind}};
 })();

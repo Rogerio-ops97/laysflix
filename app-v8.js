@@ -97,5 +97,5 @@ addEventListener('touchmove',event=>{if(!swipeGesture||event.touches.length!==1)
 addEventListener('touchend',event=>{if(!swipeGesture)return;const touch=event.changedTouches[0],dx=touch.clientX-swipeGesture.x,dy=touch.clientY-swipeGesture.y,elapsed=Date.now()-swipeGesture.at,valid=swipeGesture.horizontal&&Math.abs(dx)>=72&&Math.abs(dx)>Math.abs(dy)*1.35&&elapsed<1100;swipeGesture=null;if(!valid)return;dx>0?history.back():history.forward()},{passive:true});
 addEventListener('touchcancel',()=>swipeGesture=null,{passive:true});
 async function boot(){loadIntro();await loadInitialHistory();repairHouseOfTheDragon();repairClearedProgress();history.replaceState({kind:'view',view:'home'},'','#home');renderHome();loadHome();save();await window.LaysFlixCloud?.init({getState:()=>state,activateUser:activateCloudUser,applyState:applyCloudState,onSession:cloudSessionChanged,onCloudStatus:()=>{}})}
-if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=18'));
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=19'));
 boot();
