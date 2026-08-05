@@ -1,6 +1,7 @@
 (()=>{
 const TABLE='laysflix_user_states';
 const PENDING_PROFILE='laysflix.pending-profile.';
+const AUTH_REDIRECT='https://rogerio-ops97.github.io/laysflix/';
 let client=null,hooks=null,currentUser=null,currentProfileKind='standard',syncTimer=null,bound=false,lastCloudState='offline';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalizeKind=value=>value==='lays'?'lays':'standard';
@@ -57,6 +58,7 @@ function setMode(page,mode){
   document.querySelector('#authPassword').autocomplete=signup?'new-password':'current-password';
   document.querySelector('#authProfileChoice').hidden=!signup;
   document.querySelector('#forgotPassword').hidden=signup;
+  document.querySelector('#resendConfirmation').hidden=signup;
   authMessage('');
 }
 function bindAuth(){
@@ -69,7 +71,7 @@ function bindAuth(){
     const email=document.querySelector('#authEmail').value.trim(),password=document.querySelector('#authPassword').value,signup=page.dataset.mode==='signup',profileKind=normalizeKind(new FormData(form).get('profileKind'));
     if(!email||password.length<6)return authMessage('Informe um e-mail e uma senha com pelo menos 6 caracteres.',true);
     setAuthBusy(true);
-    const result=signup?await client.auth.signUp({email,password,options:{emailRedirectTo:`${location.origin}${location.pathname}`,data:{laysflix_profile:profileKind}}}):await client.auth.signInWithPassword({email,password});
+    const result=signup?await client.auth.signUp({email,password,options:{emailRedirectTo:AUTH_REDIRECT,data:{laysflix_profile:profileKind}}}):await client.auth.signInWithPassword({email,password});
     setAuthBusy(false);
     if(result.error)return authMessage(result.error.message,true);
     if(signup)localStorage.setItem(emailKey(email),profileKind);
@@ -80,7 +82,8 @@ function bindAuth(){
   document.querySelector('#openAuth').onclick=async()=>{if(currentUser)await pushNow();document.querySelector('#settings')?.close();setMode(page,'login');showAuth(true)};
   document.querySelector('#syncNow').onclick=pushNow;
   document.querySelector('#signOut').onclick=async()=>{await pushNow();await client.auth.signOut()};
-  document.querySelector('#forgotPassword').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite seu e-mail primeiro.',true);const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:`${location.origin}${location.pathname}`});authMessage(error?error.message:'Enviamos as instruções para seu e-mail.',!!error)};
+  document.querySelector('#forgotPassword').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite seu e-mail primeiro.',true);const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:AUTH_REDIRECT});authMessage(error?error.message:'Enviamos as instruções para seu e-mail.',!!error)};
+  document.querySelector('#resendConfirmation').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite o e-mail da conta primeiro.',true);const button=document.querySelector('#resendConfirmation');button.disabled=true;const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:AUTH_REDIRECT}});button.disabled=false;authMessage(error?error.message:'Novo e-mail enviado. Abra o link mais recente.',!!error)};
 }
 async function init(appHooks){hooks=appHooks;const url=window.LAYSFLIX_SUPABASE_URL,key=window.LAYSFLIX_SUPABASE_PUBLISHABLE_KEY;if(!url||!key||!window.supabase?.createClient){setStatus('offline','Nuvem indisponível');return}client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});bindAuth();const {data:{session}}=await client.auth.getSession();if(session)await connectSession(session);else{hooks.onSession?.(null);showAuth(true);setStatus('offline','Entre para sincronizar')}client.auth.onAuthStateChange((event,next)=>setTimeout(()=>next?connectSession(next):disconnect(),0));addEventListener('online',()=>currentUser?pushNow():setStatus('offline'));addEventListener('offline',()=>setStatus('offline'));addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser)connectSession({user:currentUser})})}
 window.LaysFlixCloud={init,queue,pushNow,get user(){return currentUser},get status(){return lastCloudState},get profileKind(){return currentProfileKind}};
