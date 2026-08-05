@@ -8,12 +8,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LaysFlix">
-  <link rel="manifest" href="manifest.webmanifest?v=20">
+  <link rel="manifest" href="manifest.webmanifest?v=21">
   <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
   <link rel="preload" as="image" href="intro-cover.jpg" type="image/jpeg" fetchpriority="high">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=20">
-  <link rel="stylesheet" href="premium.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=21">
+  <link rel="stylesheet" href="premium.css?v=21">
   <title>LaysFlix</title>
 </head>
 <body>
@@ -35,13 +35,13 @@
   </div>
   <section id="detailPage" class="page-layer" aria-hidden="true"><div id="detailContent"></div></section>
   <section id="searchPage" class="page-layer" aria-hidden="true"><div class="page-head"><button class="back" data-close-search>‹</button><form id="searchForm"><input id="searchInput" type="search" placeholder="Filmes, séries e pessoas" autocomplete="off"><button>Buscar</button></form></div><div id="searchResults" class="search-results"></div></section>
-  <section id="authPage" class="auth-page" aria-hidden="true" data-mode="login"><div class="auth-art" aria-hidden="true"><i class="auth-art-frame active"></i><i class="auth-art-frame"></i></div><div class="auth-panel"><img src="icons/icon-192.png" alt=""><small>SUA HISTÓRIA, EM TODO LUGAR</small><h1>Entre no LaysFlix</h1><p>Sincronize filmes, séries, episódios e notas entre iPhone e computador.</p><div class="auth-modes"><button type="button" class="active" data-auth-mode="login">Entrar</button><button type="button" data-auth-mode="signup">Criar conta</button></div><form id="authForm"><label>E-mail<input id="authEmail" type="email" inputmode="email" autocomplete="email" required></label><label>Senha<input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></label><button id="authSubmit" class="primary full">Entrar</button></form><button id="forgotPassword" class="auth-link" type="button">Esqueci minha senha</button><button id="resendConfirmation" class="auth-link confirmation-link" type="button">Reenviar confirmação da conta</button><p id="authMessage" role="status"></p><button id="authOffline" class="auth-offline" type="button">Usar offline por enquanto</button></div></section>
+  <section id="authPage" class="auth-page" aria-hidden="true" data-mode="login"><div class="auth-art" aria-hidden="true"><i class="auth-art-frame active"></i><i class="auth-art-frame"></i></div><div class="auth-panel"><img src="icons/icon-192.png" alt=""><small>SUA HISTÓRIA, EM TODO LUGAR</small><h1>Entre no LaysFlix</h1><p>Sincronize filmes, séries, episódios e notas entre seu celular e computador.</p><div class="auth-modes"><button type="button" class="active" data-auth-mode="login">Entrar</button><button type="button" data-auth-mode="signup">Criar conta</button></div><form id="authForm"><label>E-mail<input id="authEmail" type="email" inputmode="email" autocomplete="email" required></label><label>Senha<input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></label><button id="authSubmit" class="primary full">Entrar</button></form><button id="forgotPassword" class="auth-link" type="button">Esqueci minha senha</button><button id="resendConfirmation" class="auth-link confirmation-link" type="button">Reenviar confirmação da conta</button><p id="authMessage" role="status"></p><button id="authOffline" class="auth-offline" type="button">Usar offline por enquanto</button></div></section>
   <dialog id="settings"><button class="close" aria-label="Fechar">×</button><div class="settings-brand"><img src="icons/icon-192.png" alt=""><div><h2>LaysFlix</h2><p>Seu cinema, do seu jeito.</p></div></div><section class="settings-section cloud-settings"><h3>Conta e sincronização</h3><strong id="cloudAccount">Nenhuma conta conectada</strong><small id="cloudProfile" class="cloud-profile">Perfil não conectado</small><p id="cloudStatus" class="hint">Verificando nuvem…</p><div class="setting-actions"><button id="openAuth">Entrar</button><button id="syncNow">Sincronizar agora</button><button id="signOut">Sair da conta</button></div></section><label>Token de leitura ou chave do TMDB<input id="tmdbKey" type="password" autocomplete="off" placeholder="Cole aqui"></label><p class="hint">Guardado somente neste aparelho.</p><button id="saveKey" class="primary full">Salvar acesso</button><section class="settings-section"><h3>Listas personalizadas</h3><div id="customLists"></div><div class="inline-form"><input id="newListName" maxlength="32" placeholder="Nome da nova lista"><button id="createList">Criar</button></div></section><section class="settings-section"><h3>Seus dados</h3><p id="backupStatus" class="hint"></p><div class="setting-actions"><button id="exportData">Exportar backup</button><label class="file">Importar backup<input id="importData" type="file" accept="application/json"></label><button id="restoreTrash">Lixeira</button><button id="clearCache">Limpar cache</button></div></section><p class="tmdb-credit">Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB. Disponibilidade de streaming por JustWatch.</p></dialog>
   <div id="toast" role="status"></div>
   <script src="config.js?build=__BUILD_ID__"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
-  <script src="cloud-config.js?v=20"></script>
-  <script src="cloud-sync.js?v=20"></script>
-  <script src="app-v8.js?v=20"></script>
+  <script src="cloud-config.js?v=21"></script>
+  <script src="cloud-sync.js?v=21"></script>
+  <script src="app-v8.js?v=21"></script>
 </body>
 </html>

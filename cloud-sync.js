@@ -77,7 +77,7 @@ function setMode(page,mode){
   page.querySelectorAll('[data-auth-mode]').forEach(item=>item.classList.toggle('active',item.dataset.authMode===mode));
   document.querySelector('#authSubmit').textContent=signup?'Criar conta':'Entrar';
   document.querySelector('.auth-panel h1').textContent=signup?'Crie seu perfil':'Entre no LaysFlix';
-  document.querySelector('.auth-panel>p').textContent=signup?'Crie sua conta e comece uma biblioteca totalmente nova.':'Sincronize filmes, séries, episódios e notas entre iPhone e computador.';
+  document.querySelector('.auth-panel>p').textContent=signup?'Crie sua conta e comece uma biblioteca totalmente nova.':'Sincronize filmes, séries, episódios e notas entre seu celular e computador.';
   document.querySelector('#authPassword').autocomplete=signup?'new-password':'current-password';
   document.querySelector('#forgotPassword').hidden=signup;
   document.querySelector('#resendConfirmation').hidden=signup;
