@@ -1,7 +1,8 @@
 (()=>{
 const TABLE='laysflix_user_states';
 const AUTH_REDIRECT='https://rogerio-ops97.github.io/laysflix/';
-let client=null,hooks=null,currentUser=null,currentProfileKind='standard',syncTimer=null,authArtTimer=null,bound=false,authArtStarted=false,lastCloudState='offline';
+const RESEND_COOLDOWN_KEY='laysflix-auth-resend-after';
+let client=null,hooks=null,currentUser=null,currentProfileKind='standard',syncTimer=null,authArtTimer=null,resendTimer=null,bound=false,authArtStarted=false,lastCloudState='offline';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalizeKind=value=>value==='lays'?'lays':'standard';
 const byUpdated=(left,right)=>Number(right?.updatedAt||0)>=Number(left?.updatedAt||0)?right:left;
@@ -24,6 +25,35 @@ function setStatus(status,message=''){
 }
 function showAuth(show,message=''){const page=document.querySelector('#authPage');if(!page)return;page.classList.toggle('open',show);page.setAttribute('aria-hidden',String(!show));const output=document.querySelector('#authMessage');if(output&&message)output.textContent=message}
 function authMessage(message,error=false){const output=document.querySelector('#authMessage');if(output){output.textContent=message;output.classList.toggle('error',error)}}
+function friendlyAuthError(error){
+  const raw=String(error?.message||error||'').toLowerCase(),code=String(error?.code||'').toLowerCase();
+  if(raw.includes('rate limit')||code.includes('rate_limit')||code.includes('over_email_send'))return 'Limite temporário de e-mails atingido. Aguarde alguns minutos e use somente o link de confirmação mais recente.';
+  if(raw.includes('email not confirmed')||code==='email_not_confirmed')return 'Seu e-mail ainda não foi confirmado. Abra o link recebido ou aguarde para pedir um novo.';
+  if(raw.includes('invalid login credentials')||code==='invalid_credentials')return 'E-mail ou senha incorretos.';
+  if(raw.includes('user already registered')||code==='user_already_exists')return 'Já existe uma conta com este e-mail. Entre com sua senha ou recupere o acesso.';
+  if(raw.includes('password')&&(raw.includes('weak')||raw.includes('least')))return 'Escolha uma senha mais forte, com pelo menos 6 caracteres.';
+  if(raw.includes('email')&&raw.includes('invalid'))return 'Digite um endereço de e-mail válido.';
+  if(raw.includes('network')||raw.includes('fetch'))return 'Não foi possível conectar agora. Confira sua internet e tente novamente.';
+  return 'Não foi possível concluir agora. Tente novamente em alguns instantes.';
+}
+function startResendCooldown(seconds=60){
+  const button=document.querySelector('#resendConfirmation');
+  if(!button)return;
+  const saved=Number(localStorage.getItem(RESEND_COOLDOWN_KEY)||0),until=Math.max(saved,Date.now()+seconds*1000);
+  localStorage.setItem(RESEND_COOLDOWN_KEY,String(until));
+  clearInterval(resendTimer);
+  const update=()=>{
+    const remaining=Math.ceil((until-Date.now())/1000);
+    if(remaining>0){button.disabled=true;button.textContent=`Reenviar em ${remaining}s`;return}
+    clearInterval(resendTimer);localStorage.removeItem(RESEND_COOLDOWN_KEY);button.disabled=false;button.textContent='Reenviar confirmação da conta';
+  };
+  update();
+  resendTimer=setInterval(update,1000);
+}
+function restoreResendCooldown(){
+  const until=Number(localStorage.getItem(RESEND_COOLDOWN_KEY)||0),remaining=Math.ceil((until-Date.now())/1000);
+  if(remaining>0)startResendCooldown(remaining);else localStorage.removeItem(RESEND_COOLDOWN_KEY);
+}
 function setAuthBusy(busy){const button=document.querySelector('#authSubmit');if(button){button.disabled=busy;button.textContent=busy?'Aguarde…':document.querySelector('#authPage')?.dataset.mode==='signup'?'Criar conta':'Entrar'}}
 async function startAuthArtwork(){
   if(authArtStarted)return;
@@ -87,6 +117,7 @@ function bindAuth(){
   if(bound)return;
   bound=true;
   const page=document.querySelector('#authPage'),form=document.querySelector('#authForm');
+  restoreResendCooldown();
   page?.querySelectorAll('[data-auth-mode]').forEach(button=>button.onclick=()=>setMode(page,button.dataset.authMode));
   form.onsubmit=async event=>{
     event.preventDefault();
@@ -95,7 +126,7 @@ function bindAuth(){
     setAuthBusy(true);
     const result=signup?await client.auth.signUp({email,password,options:{emailRedirectTo:AUTH_REDIRECT}}):await client.auth.signInWithPassword({email,password});
     setAuthBusy(false);
-    if(result.error)return authMessage(result.error.message,true);
+    if(result.error)return authMessage(friendlyAuthError(result.error),true);
     if(signup&&!result.data.session)authMessage('Conta criada. Confirme o e-mail; seu perfil começará vazio.');
     else authMessage('Login realizado. Sincronizando sua biblioteca…');
   };
@@ -103,8 +134,8 @@ function bindAuth(){
   document.querySelector('#openAuth').onclick=async()=>{if(currentUser)await pushNow();document.querySelector('#settings')?.close();setMode(page,'login');showAuth(true)};
   document.querySelector('#syncNow').onclick=pushNow;
   document.querySelector('#signOut').onclick=async()=>{await pushNow();await client.auth.signOut()};
-  document.querySelector('#forgotPassword').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite seu e-mail primeiro.',true);const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:AUTH_REDIRECT});authMessage(error?error.message:'Enviamos as instruções para seu e-mail.',!!error)};
-  document.querySelector('#resendConfirmation').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite o e-mail da conta primeiro.',true);const button=document.querySelector('#resendConfirmation');button.disabled=true;const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:AUTH_REDIRECT}});button.disabled=false;authMessage(error?error.message:'Novo e-mail enviado. Abra o link mais recente.',!!error)};
+  document.querySelector('#forgotPassword').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite seu e-mail primeiro.',true);const button=document.querySelector('#forgotPassword');button.disabled=true;const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:AUTH_REDIRECT});button.disabled=false;authMessage(error?friendlyAuthError(error):'Enviamos as instruções para seu e-mail.',!!error)};
+  document.querySelector('#resendConfirmation').onclick=async()=>{const email=document.querySelector('#authEmail').value.trim();if(!email)return authMessage('Digite o e-mail da conta primeiro.',true);const button=document.querySelector('#resendConfirmation');button.disabled=true;const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:AUTH_REDIRECT}});startResendCooldown(60);authMessage(error?friendlyAuthError(error):'Novo e-mail enviado. Abra somente o link mais recente.',!!error)};
 }
 async function init(appHooks){hooks=appHooks;startAuthArtwork();const url=window.LAYSFLIX_SUPABASE_URL,key=window.LAYSFLIX_SUPABASE_PUBLISHABLE_KEY;if(!url||!key||!window.supabase?.createClient){setStatus('offline','Nuvem indisponível');return}client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});bindAuth();const {data:{session}}=await client.auth.getSession();if(session)await connectSession(session);else{hooks.onSession?.(null);showAuth(true);setStatus('offline','Entre para sincronizar')}client.auth.onAuthStateChange((event,next)=>setTimeout(()=>next?connectSession(next):disconnect(),0));addEventListener('online',()=>currentUser?pushNow():setStatus('offline'));addEventListener('offline',()=>setStatus('offline'));addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser)connectSession({user:currentUser})})}
 window.LaysFlixCloud={init,queue,pushNow,get user(){return currentUser},get status(){return lastCloudState},get profileKind(){return currentProfileKind}};
