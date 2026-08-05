@@ -1,4 +1,4 @@
-name: Publicar LaysFlix no GitHub Pages
+name: Publicar LalaFlix no GitHub Pages
 
 on:
   push:

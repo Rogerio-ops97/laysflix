@@ -1,4 +1,4 @@
-# LaysFlix
+# LalaFlix
 
 PWA pessoal premium para acompanhar filmes, séries, temporadas e episódios usando dados do TMDB.
 
@@ -14,21 +14,21 @@ PWA pessoal premium para acompanhar filmes, séries, temporadas e episódios usa
 
 ## GitHub Pages e TMDB
 
-O workflow `.github/workflows/deploy-pages.yml` publica automaticamente a branch `main` e atualiza diariamente o feed da intro. Crie um Actions Secret chamado `TOKEN_TMDB` com o Token de Leitura do TMDB e execute **Actions → Publicar LaysFlix no GitHub Pages → Run workflow**.
+O workflow `.github/workflows/deploy-pages.yml` publica automaticamente a branch `main` e atualiza diariamente o feed da intro. Crie um Actions Secret chamado `TOKEN_TMDB` com o Token de Leitura do TMDB e execute **Actions → Publicar LalaFlix no GitHub Pages → Run workflow**.
 
-Como o LaysFlix é um aplicativo estático executado no navegador, a credencial usada nas consultas do cliente faz parte do artefato publicado. Use exclusivamente uma credencial de leitura do TMDB, sem permissões de conta, e faça a rotação caso o repositório deixe de ser de uso pessoal.
+Como o LalaFlix é um aplicativo estático executado no navegador, a credencial usada nas consultas do cliente faz parte do artefato publicado. Use exclusivamente uma credencial de leitura do TMDB, sem permissões de conta, e faça a rotação caso o repositório deixe de ser de uso pessoal.
 
 ## Instalar no iPhone
 
 1. Abra `https://rogerio-ops97.github.io/laysflix/` no Safari.
 2. Toque em **Compartilhar → Adicionar à Tela de Início**.
-3. Confirme o nome LaysFlix e abra pelo novo ícone.
+3. Confirme o nome LalaFlix e abra pelo novo ícone.
 
 Após uma atualização, feche completamente o PWA e abra novamente. O histórico e as preferências permanecem no aparelho; exporte backups regularmente em **Perfil e ajustes**.
 
 ## Login e sincronização
 
-O LaysFlix usa Supabase Auth e a tabela `public.laysflix_user_states` para manter uma cópia privada da biblioteca de cada usuário. O aplicativo continua offline-first: alterações são salvas imediatamente no aparelho e enviadas à nuvem quando houver sessão e internet.
+O LalaFlix usa Supabase Auth e a tabela `public.laysflix_user_states` para manter uma cópia privada da biblioteca de cada usuário. O aplicativo continua offline-first: alterações são salvas imediatamente no aparelho e enviadas à nuvem quando houver sessão e internet.
 
 Toda conta nova começa com a biblioteca completamente vazia. Históricos anteriores só podem ser adicionados depois do login pela importação de backup, dentro da própria conta. Assim, um usuário nunca recebe automaticamente os dados de outro perfil.
 

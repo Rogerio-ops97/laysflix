@@ -103,7 +103,7 @@ async function connectSession(session){
     setMode(document.querySelector('#authPage'),'login');
     document.querySelector('#authEmail').value=session.user.email||'';
     showConfirmationHelp(true);
-    authMessage('Seu cadastro ainda está pendente. Confirme o e-mail para criar o perfil e liberar o LaysFlix.',true);
+    authMessage('Seu cadastro ainda está pendente. Confirme o e-mail para criar o perfil e liberar o LalaFlix.',true);
     return;
   }
   currentUser=session.user;
@@ -140,7 +140,7 @@ function setMode(page,mode){
   if(offline)offline.hidden=recovery;
   page.querySelectorAll('[data-auth-mode]').forEach(item=>item.classList.toggle('active',item.dataset.authMode===mode));
   document.querySelector('#authSubmit').textContent=signup?'Criar conta':'Entrar';
-  document.querySelector('.auth-panel h1').textContent=recovery?'Crie uma nova senha':signup?'Crie seu perfil':'Entre no LaysFlix';
+  document.querySelector('.auth-panel h1').textContent=recovery?'Crie uma nova senha':signup?'Crie seu perfil':'Entre no LalaFlix';
   document.querySelector('.auth-panel>p').textContent=recovery?'Proteja sua conta com uma senha nova e exclusiva.':signup?'Crie sua conta e comece uma biblioteca totalmente nova.':'Sincronize filmes, séries, episódios e notas entre seu celular e computador.';
   document.querySelector('#authPassword').autocomplete=signup?'new-password':'current-password';
   document.querySelector('#forgotPassword').hidden=signup||recovery;
@@ -176,7 +176,7 @@ function bindAuth(){
       startResendCooldown(90);
       document.querySelector('.auth-panel h1').textContent='Confirme seu e-mail';
       document.querySelector('.auth-panel>p').textContent='Seu perfil será criado somente depois que o e-mail for confirmado.';
-      authMessage('Enviamos o link de confirmação. Abra-o para concluir a criação da conta e entrar no LaysFlix.');
+      authMessage('Enviamos o link de confirmação. Abra-o para concluir a criação da conta e entrar no LalaFlix.');
     }
     else authMessage('Login realizado. Sincronizando sua biblioteca…');
   };
@@ -199,7 +199,7 @@ function bindAuth(){
     recoverySession=null;
     cleanAuthUrl();
     document.querySelector('#passwordResetForm').reset();
-    authMessage('Senha alterada com sucesso. Entrando no LaysFlix…');
+    authMessage('Senha alterada com sucesso. Entrando no LalaFlix…');
     setTimeout(()=>connectSession({user:sessionUser}),550);
   };
   document.querySelector('#cancelPasswordReset').onclick=async()=>{recoverySession=null;cleanAuthUrl();await client.auth.signOut();setMode(page,'login');showAuth(true)};
