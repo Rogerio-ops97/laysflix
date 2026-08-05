@@ -27,7 +27,7 @@ function showAuth(show,message=''){const page=document.querySelector('#authPage'
 function authMessage(message,error=false){const output=document.querySelector('#authMessage');if(output){output.textContent=message;output.classList.toggle('error',error)}}
 function friendlyAuthError(error){
   const raw=String(error?.message||error||'').toLowerCase(),code=String(error?.code||'').toLowerCase();
-  if(raw.includes('rate limit')||code.includes('rate_limit')||code.includes('over_email_send'))return 'Limite temporário de e-mails atingido. Aguarde alguns minutos e use somente o link de confirmação mais recente.';
+  if(raw.includes('rate limit')||code.includes('rate_limit')||code.includes('over_email_send'))return 'O limite de e-mails do servidor gratuito foi atingido. Aguarde a liberação da cota antes de criar outra conta ou reenviar a confirmação.';
   if(raw.includes('email not confirmed')||code==='email_not_confirmed')return 'Seu e-mail ainda não foi confirmado. Abra o link recebido ou aguarde para pedir um novo.';
   if(raw.includes('invalid login credentials')||code==='invalid_credentials')return 'E-mail ou senha incorretos.';
   if(raw.includes('user already registered')||code==='user_already_exists')return 'Já existe uma conta com este e-mail. Entre com sua senha ou recupere o acesso.';
