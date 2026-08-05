@@ -100,6 +100,6 @@ async function boot(){loadIntro();await loadInitialHistory();repairHouseOfTheDra
 if('serviceWorker'in navigator)addEventListener('load',async()=>{
   let refreshing=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});
-  try{const registration=await navigator.serviceWorker.register('./sw.js?v=25',{updateViaCache:'none'});await registration.update()}catch{}
+  try{const registration=await navigator.serviceWorker.register('./sw.js?v=26',{updateViaCache:'none'});await registration.update()}catch{}
 });
 boot();
