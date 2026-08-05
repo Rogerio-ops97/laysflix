@@ -1,15 +1,12 @@
 (()=>{
 const TABLE='laysflix_user_states';
-const PENDING_PROFILE='laysflix.pending-profile.';
 const AUTH_REDIRECT='https://rogerio-ops97.github.io/laysflix/';
 let client=null,hooks=null,currentUser=null,currentProfileKind='standard',syncTimer=null,authArtTimer=null,bound=false,authArtStarted=false,lastCloudState='offline';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalizeKind=value=>value==='lays'?'lays':'standard';
-const emailKey=email=>`${PENDING_PROFILE}${String(email||'').trim().toLowerCase()}`;
 const byUpdated=(left,right)=>Number(right?.updatedAt||0)>=Number(left?.updatedAt||0)?right:left;
 function mergeKeyed(left=[],right=[],keyOf){const items=new Map;[...left,...right].forEach(item=>{const key=keyOf(item);if(!key)return;items.set(key,items.has(key)?byUpdated(items.get(key),item):item)});return [...items.values()]}
 function mergeStates(local={},remote={}){const dismissed=[...new Set([...(local.dismissed||[]),...(remote.dismissed||[])])],blocked=new Set(dismissed),library=mergeKeyed(local.library,remote.library,item=>`${item.media_type||item.type||(item.name?'tv':'movie')}:${item.id}`).filter(item=>!blocked.has(`${item.media_type||item.type||(item.name?'tv':'movie')}:${item.id}`)),diary={...(local.diary||{})};Object.entries(remote.diary||{}).forEach(([key,value])=>diary[key]=diary[key]?byUpdated(diary[key],value):value);return {...local,...remote,library,diary,dismissed,watchEvents:mergeKeyed(local.watchEvents,remote.watchEvents,item=>item.id),trash:mergeKeyed(local.trash,remote.trash,item=>`${item.deletedAt}:${item.item?.id}`),lists:mergeKeyed(local.lists,remote.lists,item=>item.id)} }
-function pendingProfile(user){const pending=localStorage.getItem(emailKey(user?.email)),metadata=user?.user_metadata?.laysflix_profile;return normalizeKind(pending||metadata)}
 function setStatus(status,message=''){
   lastCloudState=status;
   document.documentElement.dataset.cloud=status;
@@ -54,7 +51,7 @@ async function startAuthArtwork(){
     addEventListener('visibilitychange',()=>{if(!document.hidden)next()});
   }catch{}
 }
-async function pushNow(){clearTimeout(syncTimer);if(!client||!currentUser||!hooks)return;setStatus('syncing');const payload=clone(hooks.getState());payload.preferences={...(payload.preferences||{}),profileKind:currentProfileKind};const {error}=await client.from(TABLE).upsert({user_id:currentUser.id,profile_kind:currentProfileKind,state:payload,revision:Date.now(),updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error){setStatus(navigator.onLine?'error':'offline',error.message);return false}localStorage.removeItem(emailKey(currentUser.email));setStatus('synced');return true}
+async function pushNow(){clearTimeout(syncTimer);if(!client||!currentUser||!hooks)return;setStatus('syncing');const payload=clone(hooks.getState());payload.preferences={...(payload.preferences||{}),profileKind:currentProfileKind};const {error}=await client.from(TABLE).upsert({user_id:currentUser.id,profile_kind:currentProfileKind,state:payload,revision:Date.now(),updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error){setStatus(navigator.onLine?'error':'offline',error.message);return false}setStatus('synced');return true}
 function queue(){if(!currentUser)return;setStatus(navigator.onLine?'syncing':'offline');clearTimeout(syncTimer);syncTimer=setTimeout(pushNow,900)}
 async function connectSession(session){
   if(!session?.user)return;
@@ -66,7 +63,7 @@ async function connectSession(session){
   setStatus('syncing');
   const {data,error}=await client.from(TABLE).select('state,revision,updated_at,profile_kind').eq('user_id',session.user.id).maybeSingle();
   if(error){setStatus(navigator.onLine?'error':'offline',error.message);return}
-  currentProfileKind=normalizeKind(data?.profile_kind||pendingProfile(session.user));
+  currentProfileKind=normalizeKind(data?.profile_kind);
   const local=clone(hooks.activateUser(session.user.id,{profileKind:currentProfileKind,isNew:!data}));
   const merged=data?.state?mergeStates(local,data.state):local;
   merged.preferences={...(merged.preferences||{}),profileKind:currentProfileKind};
@@ -80,9 +77,8 @@ function setMode(page,mode){
   page.querySelectorAll('[data-auth-mode]').forEach(item=>item.classList.toggle('active',item.dataset.authMode===mode));
   document.querySelector('#authSubmit').textContent=signup?'Criar conta':'Entrar';
   document.querySelector('.auth-panel h1').textContent=signup?'Crie seu perfil':'Entre no LaysFlix';
-  document.querySelector('.auth-panel>p').textContent=signup?'Escolha se este perfil começa vazio ou recebe o histórico da Lays.':'Sincronize filmes, séries, episódios e notas entre iPhone e computador.';
+  document.querySelector('.auth-panel>p').textContent=signup?'Crie sua conta e comece uma biblioteca totalmente nova.':'Sincronize filmes, séries, episódios e notas entre iPhone e computador.';
   document.querySelector('#authPassword').autocomplete=signup?'new-password':'current-password';
-  document.querySelector('#authProfileChoice').hidden=!signup;
   document.querySelector('#forgotPassword').hidden=signup;
   document.querySelector('#resendConfirmation').hidden=signup;
   authMessage('');
@@ -94,14 +90,13 @@ function bindAuth(){
   page?.querySelectorAll('[data-auth-mode]').forEach(button=>button.onclick=()=>setMode(page,button.dataset.authMode));
   form.onsubmit=async event=>{
     event.preventDefault();
-    const email=document.querySelector('#authEmail').value.trim(),password=document.querySelector('#authPassword').value,signup=page.dataset.mode==='signup',profileKind=normalizeKind(new FormData(form).get('profileKind'));
+    const email=document.querySelector('#authEmail').value.trim(),password=document.querySelector('#authPassword').value,signup=page.dataset.mode==='signup';
     if(!email||password.length<6)return authMessage('Informe um e-mail e uma senha com pelo menos 6 caracteres.',true);
     setAuthBusy(true);
-    const result=signup?await client.auth.signUp({email,password,options:{emailRedirectTo:AUTH_REDIRECT,data:{laysflix_profile:profileKind}}}):await client.auth.signInWithPassword({email,password});
+    const result=signup?await client.auth.signUp({email,password,options:{emailRedirectTo:AUTH_REDIRECT}}):await client.auth.signInWithPassword({email,password});
     setAuthBusy(false);
     if(result.error)return authMessage(result.error.message,true);
-    if(signup)localStorage.setItem(emailKey(email),profileKind);
-    if(signup&&!result.data.session)authMessage(profileKind==='lays'?'Conta criada. Confirme o e-mail; o histórico será importado no primeiro acesso.':'Conta criada. Confirme o e-mail; seu perfil começará vazio.');
+    if(signup&&!result.data.session)authMessage('Conta criada. Confirme o e-mail; seu perfil começará vazio.');
     else authMessage('Login realizado. Sincronizando sua biblioteca…');
   };
   document.querySelector('#authOffline').onclick=()=>showAuth(false);
