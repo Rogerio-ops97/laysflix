@@ -12,5 +12,7 @@ const resolveOne=async(entry,type)=>{const hit=await search(entry,type);if(!hit)
 const tasks=[...source.series.map(entry=>({entry,type:'tv'})),...source.movies.map(entry=>({entry,type:'movie'}))];
 const library=[];const unresolved=[];
 for(let i=0;i<tasks.length;i+=8){const batch=tasks.slice(i,i+8);const values=await Promise.all(batch.map(async task=>{try{return await resolveOne(task.entry,task.type)}catch{return null}}));values.forEach((value,index)=>value?library.push(value):unresolved.push({title:batch[index].entry.title,type:batch[index].type}));}
-await fs.writeFile('initial-library.json',JSON.stringify({version:`${source.version}-episodes-v3`,summary:source.summary,library,unresolved},null,2));
-console.log(`Histórico resolvido: ${library.length}/${tasks.length}; não encontrados: ${unresolved.length}`);
+const uniqueLibrary=new Map;for(const item of library){const key=`${item.media_type}:${item.id}`,current=uniqueLibrary.get(key);if(!current||Number(item.watchedEpisodeCount||0)>Number(current.watchedEpisodeCount||0))uniqueLibrary.set(key,item)}
+const resolvedLibrary=[...uniqueLibrary.values()];
+await fs.writeFile('initial-library.json',JSON.stringify({version:`${source.version}-episodes-v4`,summary:source.summary,library:resolvedLibrary,unresolved},null,2));
+console.log(`Histórico resolvido: ${resolvedLibrary.length} títulos únicos de ${tasks.length} registros; não encontrados: ${unresolved.length}`);
