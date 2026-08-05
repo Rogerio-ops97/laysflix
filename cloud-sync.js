@@ -9,6 +9,7 @@ let client=null,hooks=null,currentUser=null,currentProfileKind='standard',syncTi
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalizeKind=value=>value==='lays'?'lays':'standard';
 const byUpdated=(left,right)=>Number(right?.updatedAt||0)>=Number(left?.updatedAt||0)?right:left;
+const isConfirmed=user=>Boolean(user?.email_confirmed_at||user?.confirmed_at);
 const rememberSession=()=>localStorage.getItem(REMEMBER_SESSION_KEY)!=='false';
 const authStorage={getItem:key=>rememberSession()?localStorage.getItem(key):sessionStorage.getItem(key),setItem:(key,value)=>{const primary=rememberSession()?localStorage:sessionStorage,secondary=rememberSession()?sessionStorage:localStorage;primary.setItem(key,value);secondary.removeItem(key)},removeItem:key=>{localStorage.removeItem(key);sessionStorage.removeItem(key)}};
 function mergeKeyed(left=[],right=[],keyOf){const items=new Map;[...left,...right].forEach(item=>{const key=keyOf(item);if(!key)return;items.set(key,items.has(key)?byUpdated(items.get(key),item):item)});return [...items.values()]}
@@ -91,6 +92,17 @@ async function pushNow(){clearTimeout(syncTimer);if(!client||!currentUser||!hook
 function queue(){if(!currentUser)return;setStatus(navigator.onLine?'syncing':'offline');clearTimeout(syncTimer);syncTimer=setTimeout(pushNow,400)}
 async function connectSession(session){
   if(!session?.user)return;
+  if(!isConfirmed(session.user)){
+    currentUser=null;
+    hooks?.onSession?.(null);
+    setStatus('offline','Confirme seu e-mail para criar o perfil');
+    showAuth(true);
+    setMode(document.querySelector('#authPage'),'login');
+    document.querySelector('#authEmail').value=session.user.email||'';
+    showConfirmationHelp(true);
+    authMessage('Seu cadastro ainda está pendente. Confirme o e-mail para criar o perfil e liberar o LaysFlix.',true);
+    return;
+  }
   currentUser=session.user;
   showAuth(false);
   hooks.onSession?.(session);
@@ -144,7 +156,9 @@ function bindAuth(){
       document.querySelector('#authEmail').value=email;
       showConfirmationHelp(true);
       startResendCooldown(90);
-      authMessage('Conta criada. Confirme pelo e-mail recebido; depois o link abrirá o LaysFlix e você já poderá entrar.');
+      document.querySelector('.auth-panel h1').textContent='Confirme seu e-mail';
+      document.querySelector('.auth-panel>p').textContent='Seu perfil será criado somente depois que o e-mail for confirmado.';
+      authMessage('Enviamos o link de confirmação. Abra-o para concluir a criação da conta e entrar no LaysFlix.');
     }
     else authMessage('Login realizado. Sincronizando sua biblioteca…');
   };
