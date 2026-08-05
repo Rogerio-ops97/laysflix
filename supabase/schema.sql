@@ -7,8 +7,13 @@ create table public.laysflix_user_states (
   updated_at timestamptz not null default now()
 );
 
+alter table public.laysflix_user_states
+  add constraint laysflix_only_lays_account_special
+  check (profile_kind <> 'lays' or user_id = '0d0764f0-0644-4549-9709-284d9f05b96b'::uuid);
+
 alter table public.laysflix_user_states enable row level security;
 revoke all on table public.laysflix_user_states from anon;
+revoke all on table public.laysflix_user_states from authenticated;
 grant select, insert, update, delete on table public.laysflix_user_states to authenticated;
 
 create policy "Users can read their own LaysFlix state"
