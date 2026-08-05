@@ -26,6 +26,21 @@ Como o LaysFlix é um aplicativo estático executado no navegador, a credencial 
 
 Após uma atualização, feche completamente o PWA e abra novamente. O histórico e as preferências permanecem no aparelho; exporte backups regularmente em **Perfil e ajustes**.
 
+## Login e sincronização
+
+O LaysFlix usa Supabase Auth e a tabela `public.laysflix_user_states` para manter uma cópia privada da biblioteca de cada usuário. O aplicativo continua offline-first: alterações são salvas imediatamente no aparelho e enviadas à nuvem quando houver sessão e internet.
+
+- URL e chave publicável: `cloud-config.js`.
+- Cliente fixado: `@supabase/supabase-js@2.111.0`.
+- Schema e políticas RLS: `supabase/schema.sql`.
+- URL de retorno que deve ser autorizada no Supabase: `https://rogerio-ops97.github.io/laysflix/`.
+
+A chave publicável pode aparecer no frontend. Nunca use uma chave `service_role` ou secret key no GitHub Pages.
+
+## Layout responsivo
+
+Até 899 px, o app usa a interface móvel com navegação inferior, safe areas e gestos. A partir de 900 px, ativa automaticamente a experiência para computador com sidebar, área de conteúdo ampliada, mais colunas e páginas de detalhes maiores.
+
 ## Créditos
 
 Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB. Dados de disponibilidade de streaming são fornecidos pelo JustWatch via TMDB.

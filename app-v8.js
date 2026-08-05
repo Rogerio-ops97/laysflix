@@ -3,7 +3,7 @@ const $$=(selector,root=document)=>[...root.querySelectorAll(selector)];
 const STORAGE='laysflix.state.v3',LIBRARY_V2='laysflix.library.v2',KEY='laysflix.tmdb.key',CACHE_PREFIX='laysflix.cache.';
 const STATUS={watchlist:'Quero assistir',watching:'Assistindo',current:'Em dia',paused:'Pausada',watched:'Concluída',abandoned:'Abandonada',rewatching:'Reassistindo'};
 const main=$('#main');
-let view='home',activeFilter='all',homeData={trending:[],movies:[],series:[],recommendations:[]},activeDetail=null,calendarItems=[],heroTimer=null,heroIndex=0;
+let view='home',activeFilter='all',homeData={trending:[],movies:[],series:[],recommendations:[]},activeDetail=null,calendarItems=[],heroTimer=null,heroIndex=0,activeUserId=null;
 const blankState=()=>({schema:3,library:[],lists:[],diary:{},watchEvents:[],trash:[],dismissed:[],preferences:{region:'BR'},historySummary:null,lastBackup:null});
 function migrateState(){
   try{const saved=JSON.parse(localStorage.getItem(STORAGE)||'null');if(saved?.schema===3)return {...blankState(),...saved,library:Array.isArray(saved.library)?saved.library:[]}}
@@ -14,7 +14,11 @@ function migrateState(){
   localStorage.setItem(STORAGE,JSON.stringify(state));return state;
 }
 let state=migrateState();
-function save(){state.trash=state.trash.filter(x=>Date.now()-x.deletedAt<30*864e5);localStorage.setItem(STORAGE,JSON.stringify(state))}
+const stateStorageKey=userId=>userId?`${STORAGE}.${userId}`:STORAGE;
+function save(){state.trash=state.trash.filter(x=>Date.now()-x.deletedAt<30*864e5);localStorage.setItem(stateStorageKey(activeUserId),JSON.stringify(state));window.LaysFlixCloud?.queue()}
+function activateCloudUser(userId){activeUserId=userId;try{const saved=JSON.parse(localStorage.getItem(stateStorageKey(userId))||'null');state=saved?.schema===3?{...blankState(),...saved}:migrateState()}catch{state=migrateState()}return state}
+function applyCloudState(next,userId){activeUserId=userId;state={...blankState(),...next,schema:3,library:Array.isArray(next?.library)?next.library:[]};repairHouseOfTheDragon();repairClearedProgress();localStorage.setItem(stateStorageKey(userId),JSON.stringify(state));renderView(view,activeFilter)}
+function cloudSessionChanged(session){if(!session){activeUserId=null;state=migrateState()}const avatar=$('#settingsButton'),email=session?.user?.email||'';avatar.textContent=email?email.slice(0,1).toUpperCase():'L';avatar.setAttribute('aria-label',email?`Conta ${email}`:'Perfil e ajustes')}
 const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 const titleOf=item=>item?.title||item?.name||item?.original_title||item?.original_name||'Sem título';
 const typeOf=item=>item?.media_type||item?.type||(item?.first_air_date||item?.name?'tv':'movie');
@@ -91,6 +95,6 @@ addEventListener('touchstart',event=>{if(event.touches.length!==1||blocksNavigat
 addEventListener('touchmove',event=>{if(!swipeGesture||event.touches.length!==1)return;const touch=event.touches[0],dx=touch.clientX-swipeGesture.x,dy=touch.clientY-swipeGesture.y;if(!swipeGesture.horizontal&&Math.abs(dy)>18&&Math.abs(dy)>Math.abs(dx))return swipeGesture=null;if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)*1.15){swipeGesture.horizontal=true;event.preventDefault()}},{passive:false});
 addEventListener('touchend',event=>{if(!swipeGesture)return;const touch=event.changedTouches[0],dx=touch.clientX-swipeGesture.x,dy=touch.clientY-swipeGesture.y,elapsed=Date.now()-swipeGesture.at,valid=swipeGesture.horizontal&&Math.abs(dx)>=72&&Math.abs(dx)>Math.abs(dy)*1.35&&elapsed<1100;swipeGesture=null;if(!valid)return;dx>0?history.back():history.forward()},{passive:true});
 addEventListener('touchcancel',()=>swipeGesture=null,{passive:true});
-async function boot(){loadIntro();await importInitialHistory();repairHouseOfTheDragon();repairClearedProgress();history.replaceState({kind:'view',view:'home'},'','#home');renderHome();loadHome();save()}
-if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=15'));
+async function boot(){loadIntro();await importInitialHistory();repairHouseOfTheDragon();repairClearedProgress();history.replaceState({kind:'view',view:'home'},'','#home');renderHome();loadHome();save();await window.LaysFlixCloud?.init({getState:()=>state,activateUser:activateCloudUser,applyState:applyCloudState,onSession:cloudSessionChanged,onCloudStatus:()=>{}})}
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=16'));
 boot();
